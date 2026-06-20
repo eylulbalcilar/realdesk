@@ -7,15 +7,6 @@ export type Protocol = {
   poolCount: number;
   chainCount: number;
 };
-export type Protocol = {
-  id: string;
-  name: string;
-  assetType: string;
-  apy: number;
-  tvl: number;
-  poolCount: number;
-  chainCount: number;
-};
 
 export type Pool = {
   chain: string;
@@ -26,4 +17,27 @@ export type Pool = {
 
 export type ProtocolDetail = Protocol & {
   pools: Pool[];
+};
+export type RiskDimension =
+  | 'collateral'
+  | 'smartContract'
+  | 'counterparty'
+  | 'liquidity'
+  | 'regulatory'
+  | 'transparency'
+  | 'oracle';
+
+export type RiskScores = {
+  collateral: number;
+  smartContract: number;
+  counterparty: number;
+  liquidity: number;
+  regulatory: number;
+  transparency: number;
+  oracle: number;
+};
+
+export type ProtocolRisk = {
+  scores: RiskScores;
+  rationale: Record<RiskDimension, string>;
 };
