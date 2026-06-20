@@ -22,9 +22,9 @@ export default async function Home() {
   return (
     <main className="min-h-screen p-8 max-w-6xl mx-auto">
       <div className="mb-8">
-        <h1 className="text-4xl font-bold">Realdesk</h1>
+        <h1 className="text-3xl font-semibold tracking-tight">RWA Protocols</h1>
         <p className="mt-2 text-muted-foreground">
-          Compare RWA protocols by yield and risk
+          Real-time comparison of yield, TVL, and risk across major RWA protocols
         </p>
       </div>
 

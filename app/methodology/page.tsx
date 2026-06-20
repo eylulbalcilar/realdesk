@@ -84,11 +84,11 @@ export default function MethodologyPage() {
       </Link>
 
       <div className="mt-4 mb-8">
-        <h1 className="text-4xl font-bold">Risk Scoring Methodology</h1>
+        <h1 className="text-3xl font-semibold tracking-tight">Risk Scoring Methodology</h1>
         <p className="mt-2 text-muted-foreground">
-          How Realdesk assesses risk across RWA protocols
+            How Realdesk assesses risk across RWA protocols
         </p>
-      </div>
+        </div>
 
       <section className="mb-12 space-y-4 text-sm leading-relaxed">
         <p>
