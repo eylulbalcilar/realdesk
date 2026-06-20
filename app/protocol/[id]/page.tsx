@@ -18,6 +18,23 @@ import { Badge } from '@/components/ui/badge';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 
+function getRiskColor(letter: string): string {
+  switch (letter) {
+    case 'A':
+      return 'text-emerald-600';
+    case 'B':
+      return 'text-lime-600';
+    case 'C':
+      return 'text-amber-600';
+    case 'D':
+      return 'text-orange-600';
+    case 'F':
+      return 'text-red-600';
+    default:
+      return 'text-foreground';
+  }
+}
+
 function formatTVL(tvl: number): string {
   if (tvl >= 1_000_000_000) return `$${(tvl / 1_000_000_000).toFixed(2)}B`;
   if (tvl >= 1_000_000) return `$${(tvl / 1_000_000).toFixed(2)}M`;
@@ -87,7 +104,9 @@ export default async function ProtocolPage({
           <div className="rounded-lg border p-4">
             <div className="text-sm text-muted-foreground">Risk Grade</div>
             <div className="flex items-baseline gap-2">
-              <div className="text-2xl font-bold">{grade.letter}</div>
+              <div className={`text-2xl font-bold ${getRiskColor(grade.letter)}`}>
+                {grade.letter}
+              </div>
               <div className="text-sm text-muted-foreground">
                 {grade.label} ({weightedScore.toFixed(2)})
               </div>
