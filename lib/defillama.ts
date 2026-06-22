@@ -91,3 +91,20 @@ export async function fetchProtocolDetail(
     pools,
   };
 }
+export type ChainTVL = {
+  name: string;
+  value: number;
+};
+
+export function aggregateTVLByChain(pools: Pool[]): ChainTVL[] {
+  const chainMap = new Map<string, number>();
+
+  for (const pool of pools) {
+    const current = chainMap.get(pool.chain) ?? 0;
+    chainMap.set(pool.chain, current + pool.tvl);
+  }
+
+  return Array.from(chainMap.entries())
+    .map(([name, value]) => ({ name, value }))
+    .sort((a, b) => b.value - a.value);
+}

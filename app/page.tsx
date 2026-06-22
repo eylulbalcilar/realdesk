@@ -13,6 +13,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
+import { formatUsd } from '@/lib/format';
 import Link from 'next/link';
 
 function getRiskColor(letter: string): string {
@@ -32,14 +33,9 @@ function getRiskColor(letter: string): string {
   }
 }
 
-function formatTVL(tvl: number): string {
-  if (tvl >= 1_000_000_000) return `$${(tvl / 1_000_000_000).toFixed(2)}B`;
-  if (tvl >= 1_000_000) return `$${(tvl / 1_000_000).toFixed(0)}M`;
-  return `$${tvl.toLocaleString()}`;
-}
-
 export default async function Home() {
   const protocols = await fetchProtocols();
+  const sorted = [...protocols].sort((a, b) => b.tvl - a.tvl);
 
   return (
     <main className="min-h-screen p-8 max-w-6xl mx-auto">
@@ -62,45 +58,57 @@ export default async function Home() {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {protocols.map((p) => {
+          {sorted.map((p) => {
             const risk = RISK_SCORES[p.id];
             const weightedScore = risk
               ? calculateWeightedRiskScore(risk.scores)
               : 0;
             const grade = risk ? getRiskGrade(weightedScore) : null;
+            const href = `/protocol/${p.id}`;
 
             return (
-              <TableRow
-                key={p.id}
-                className="cursor-pointer hover:bg-muted/50"
-              >
-                <TableCell className="font-medium">
-                  <Link href={`/protocol/${p.id}`} className="block">
+              <TableRow key={p.id} className="hover:bg-muted/50">
+                <TableCell className="font-medium p-0">
+                  <Link href={href} className="block px-4 py-3">
                     {p.name}
                   </Link>
                 </TableCell>
-                <TableCell>
-                  <Badge variant="secondary">{p.assetType}</Badge>
+                <TableCell className="p-0">
+                  <Link href={href} className="block px-4 py-3">
+                    <Badge variant="secondary">{p.assetType}</Badge>
+                  </Link>
                 </TableCell>
-                <TableCell className="text-right">
-                  {p.apy.toFixed(2)}%
+                <TableCell className="text-right p-0 tabular-nums">
+                  <Link href={href} className="block px-4 py-3">
+                    {p.apy.toFixed(2)}%
+                  </Link>
                 </TableCell>
-                <TableCell className="text-right">{formatTVL(p.tvl)}</TableCell>
-                <TableCell className="text-center">
-                  {grade && (
-                    <div className="flex flex-col items-center">
-                      <span
-                        className={`font-bold text-lg ${getRiskColor(grade.letter)}`}
-                      >
-                        {grade.letter}
-                      </span>
-                      <span className="text-xs text-muted-foreground">
-                        {weightedScore.toFixed(2)}
-                      </span>
-                    </div>
-                  )}
+                <TableCell className="text-right p-0 tabular-nums">
+                  <Link href={href} className="block px-4 py-3">
+                    {formatUsd(p.tvl)}
+                  </Link>
                 </TableCell>
-                <TableCell className="text-right">{p.poolCount}</TableCell>
+                <TableCell className="text-center p-0">
+                  <Link href={href} className="block px-4 py-3">
+                    {grade && (
+                      <div className="flex flex-col items-center">
+                        <span
+                          className={`font-bold text-lg ${getRiskColor(grade.letter)}`}
+                        >
+                          {grade.letter}
+                        </span>
+                        <span className="text-xs text-muted-foreground tabular-nums">
+                          {weightedScore.toFixed(2)}
+                        </span>
+                      </div>
+                    )}
+                  </Link>
+                </TableCell>
+                <TableCell className="text-right p-0 tabular-nums">
+                  <Link href={href} className="block px-4 py-3">
+                    {p.poolCount}
+                  </Link>
+                </TableCell>
               </TableRow>
             );
           })}
