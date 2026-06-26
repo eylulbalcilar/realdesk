@@ -1,4 +1,4 @@
-import { fetchProtocolDetail, aggregateTVLByChain } from '@/lib/defillama';
+import { fetchProtocolDetail } from '@/lib/defillama';
 import {
   RISK_SCORES,
   RISK_WEIGHTS,
@@ -15,8 +15,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { ChainDistributionChart } from '@/components/charts/chain-distribution-chart';
-import { formatUsd } from '@/lib/format';
+import { ChainDistribution } from '@/components/chain-distribution';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 
@@ -37,6 +36,13 @@ function getRiskColor(letter: string): string {
   }
 }
 
+function formatTVL(tvl: number): string {
+  if (tvl >= 1_000_000_000) return `$${(tvl / 1_000_000_000).toFixed(2)}B`;
+  if (tvl >= 1_000_000) return `$${(tvl / 1_000_000).toFixed(2)}M`;
+  if (tvl >= 1_000) return `$${(tvl / 1_000).toFixed(0)}K`;
+  return `$${tvl.toLocaleString()}`;
+}
+
 function ScoreBar({ score }: { score: number }) {
   const percentage = (score / 5) * 100;
   return (
@@ -47,9 +53,7 @@ function ScoreBar({ score }: { score: number }) {
           style={{ width: `${percentage}%` }}
         />
       </div>
-      <span className="text-sm font-medium w-8 text-right tabular-nums">
-        {score}/5
-      </span>
+      <span className="text-sm font-medium w-8 text-right">{score}/5</span>
     </div>
   );
 }
@@ -64,7 +68,6 @@ export default async function ProtocolPage({
 
   if (!protocol) notFound();
 
-  const chainData = aggregateTVLByChain(protocol.pools);
   const risk = RISK_SCORES[id];
   const weightedScore = risk ? calculateWeightedRiskScore(risk.scores) : 0;
   const grade = risk ? getRiskGrade(weightedScore) : null;
@@ -78,113 +81,100 @@ export default async function ProtocolPage({
         ← Back to overview
       </Link>
 
-      <div className="mt-4 space-y-10">
-        <div>
-          <h1 className="text-4xl font-bold tracking-tight">{protocol.name}</h1>
-          <div className="flex gap-2 mt-2">
-            <Badge variant="secondary">{protocol.assetType}</Badge>
-            <Badge variant="outline">{protocol.poolCount} pools</Badge>
-            <Badge variant="outline">{protocol.chainCount} chains</Badge>
-          </div>
+      <div className="mt-4 mb-8">
+        <h1 className="text-4xl font-bold">{protocol.name}</h1>
+        <div className="flex gap-2 mt-2">
+          <Badge variant="secondary">{protocol.assetType}</Badge>
+          <Badge variant="outline">{protocol.poolCount} pools</Badge>
+          <Badge variant="outline">{protocol.chainCount} chains</Badge>
         </div>
+      </div>
 
-        <div className="grid grid-cols-3 gap-4">
-          <div className="rounded-lg border p-4">
-            <div className="text-sm text-muted-foreground">Total TVL</div>
-            <div className="text-2xl font-semibold mt-1 tabular-nums">
-              {formatUsd(protocol.tvl)}
-            </div>
+      <div className="grid grid-cols-3 gap-4 mb-8">
+        <div className="rounded-lg border p-4">
+          <div className="text-sm text-muted-foreground">Total TVL</div>
+          <div className="text-2xl font-bold">{formatTVL(protocol.tvl)}</div>
+        </div>
+        <div className="rounded-lg border p-4">
+          <div className="text-sm text-muted-foreground">
+            Weighted Average APY
           </div>
+          <div className="text-2xl font-bold">{protocol.apy.toFixed(2)}%</div>
+        </div>
+        {grade && (
           <div className="rounded-lg border p-4">
-            <div className="text-sm text-muted-foreground">
-              Weighted Average APY
-            </div>
-            <div className="text-2xl font-semibold mt-1 tabular-nums">
-              {protocol.apy.toFixed(2)}%
-            </div>
-          </div>
-          {grade && (
-            <div className="rounded-lg border p-4">
-              <div className="text-sm text-muted-foreground">Risk Grade</div>
-              <div className="flex items-baseline gap-3 mt-1">
-                <div
-                  className={`text-4xl font-bold leading-none ${getRiskColor(grade.letter)}`}
-                >
-                  {grade.letter}
-                </div>
-                <div className="text-sm text-muted-foreground">
-                  <div>{grade.label}</div>
-                  <div className="tabular-nums">{weightedScore.toFixed(2)} / 5.00</div>
-                </div>
+            <div className="text-sm text-muted-foreground">Risk Grade</div>
+            <div className="flex items-baseline gap-2">
+              <div
+                className={`text-2xl font-bold ${getRiskColor(grade.letter)}`}
+              >
+                {grade.letter}
+              </div>
+              <div className="text-sm text-muted-foreground">
+                {grade.label} ({weightedScore.toFixed(2)})
               </div>
             </div>
-          )}
-        </div>
-
-        <section>
-          <h2 className="text-2xl font-semibold mb-4">Chain Distribution</h2>
-          <div className="rounded-lg border p-4">
-            <ChainDistributionChart data={chainData} />
           </div>
-        </section>
-
-        {risk && (
-          <section>
-            <h2 className="text-2xl font-semibold mb-4">Risk Breakdown</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {Object.entries(RISK_WEIGHTS).map(([key, weight]) => {
-                const dimensionKey = key as keyof typeof RISK_WEIGHTS;
-                const score = risk.scores[dimensionKey];
-                const label = RISK_DIMENSION_LABELS[dimensionKey];
-                const rationale = risk.rationale[dimensionKey];
-
-                return (
-                  <div key={key} className="rounded-lg border p-4">
-                    <div className="flex items-baseline justify-between mb-2">
-                      <h3 className="font-semibold">{label}</h3>
-                      <span className="text-xs text-muted-foreground tabular-nums">
-                        Weight: {(weight * 100).toFixed(0)}%
-                      </span>
-                    </div>
-                    <ScoreBar score={score} />
-                    <p className="text-sm text-muted-foreground mt-2">
-                      {rationale}
-                    </p>
-                  </div>
-                );
-              })}
-            </div>
-          </section>
         )}
-
-        <section>
-          <h2 className="text-2xl font-semibold mb-4">Pools</h2>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Chain</TableHead>
-                <TableHead>Symbol</TableHead>
-                <TableHead className="text-right">APY</TableHead>
-                <TableHead className="text-right">TVL</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {protocol.pools.map((p, i) => (
-                <TableRow key={`${p.chain}-${p.symbol}-${i}`}>
-                  <TableCell>{p.chain}</TableCell>
-                  <TableCell className="font-medium">{p.symbol}</TableCell>
-                  <TableCell className="text-right tabular-nums">
-                    {p.apy.toFixed(2)}%
-                  </TableCell>
-                  <TableCell className="text-right tabular-nums">
-                    {formatUsd(p.tvl)}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </section>
       </div>
+
+      <div className="mb-8">
+        <ChainDistribution pools={protocol.pools} />
+      </div>
+
+      {risk && (
+        <div className="mb-8">
+          <h2 className="text-2xl font-semibold mb-4">Risk Breakdown</h2>
+          <div className="space-y-4">
+            {Object.entries(RISK_WEIGHTS).map(([key, weight]) => {
+              const dimensionKey = key as keyof typeof RISK_WEIGHTS;
+              const score = risk.scores[dimensionKey];
+              const label = RISK_DIMENSION_LABELS[dimensionKey];
+              const rationale = risk.rationale[dimensionKey];
+
+              return (
+                <div
+                  key={key}
+                  className="rounded-lg border p-4"
+                >
+                  <div className="flex items-baseline justify-between mb-2">
+                    <h3 className="font-semibold">{label}</h3>
+                    <span className="text-xs text-muted-foreground">
+                      Weight: {(weight * 100).toFixed(0)}%
+                    </span>
+                  </div>
+                  <ScoreBar score={score} />
+                  <p className="text-sm text-muted-foreground mt-2">
+                    {rationale}
+                  </p>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      <h2 className="text-2xl font-semibold mb-4">Pools</h2>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Chain</TableHead>
+            <TableHead>Symbol</TableHead>
+            <TableHead className="text-right">APY</TableHead>
+            <TableHead className="text-right">TVL</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {protocol.pools.map((p, i) => (
+            <TableRow key={`${p.chain}-${p.symbol}-${i}`}>
+              <TableCell>{p.chain}</TableCell>
+              <TableCell className="font-medium">{p.symbol}</TableCell>
+              <TableCell className="text-right">{p.apy.toFixed(2)}%</TableCell>
+              <TableCell className="text-right">{formatTVL(p.tvl)}</TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
     </main>
   );
 }
