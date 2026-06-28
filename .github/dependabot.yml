@@ -5,6 +5,12 @@ updates:
     schedule:
       interval: weekly
     open-pull-requests-limit: 5
+    ignore:
+      # eslint 10+ breaks eslint-config-next 16.2.9 (bundled eslint-plugin-react
+      # calls the removed contextOrFilename.getFilename API). Hold majors until
+      # eslint-config-next supports the new ESLint.
+      - dependency-name: "eslint"
+        update-types: ["version-update:semver-major"]
     groups:
       production-dependencies:
         dependency-type: production
@@ -14,3 +20,6 @@ updates:
     directory: "/"
     schedule:
       interval: weekly
+    groups:
+      github-actions:
+        patterns: ["*"]
