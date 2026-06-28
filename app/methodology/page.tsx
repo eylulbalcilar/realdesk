@@ -1,5 +1,7 @@
 import { RISK_WEIGHTS, RISK_DIMENSION_LABELS } from '@/lib/risk-scores';
+import { gradeBadgeClass } from '@/lib/ui';
 import Link from 'next/link';
+import { ArrowLeft } from 'lucide-react';
 
 type DimensionKey = keyof typeof RISK_WEIGHTS;
 
@@ -76,92 +78,152 @@ const DIMENSION_DETAILS: Record<DimensionKey, { description: string; scoring: { 
   },
 };
 
-export default function MethodologyPage() {
+const GRADES = [
+  { grade: 'A', range: '4.50 - 5.00', label: 'Low Risk' },
+  { grade: 'B', range: '3.50 - 4.49', label: 'Moderate Risk' },
+  { grade: 'C', range: '2.50 - 3.49', label: 'Elevated Risk' },
+  { grade: 'D', range: '1.50 - 2.49', label: 'High Risk' },
+  { grade: 'F', range: '0.00 - 1.49', label: 'Very High Risk' },
+];
+
+function SectionTitle({ children }: { children: React.ReactNode }) {
   return (
-    <main className="min-h-screen p-8 max-w-4xl mx-auto">
-      <Link href="/" className="text-sm text-muted-foreground hover:underline">
-        ← Back to overview
+    <div className="mb-4 flex items-center gap-2">
+      <span className="h-5 w-1 rounded-full bg-primary shadow-[0_0_10px_var(--primary)]" />
+      <h2 className="font-display text-xl font-semibold tracking-tight">
+        {children}
+      </h2>
+    </div>
+  );
+}
+
+export default function MethodologyPage() {
+  const maxWeight = Math.max(...Object.values(RISK_WEIGHTS));
+
+  return (
+    <main className="shell pt-8 pb-10">
+      <Link
+        href="/"
+        className="inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
+      >
+        <ArrowLeft className="h-4 w-4" />
+        Back to overview
       </Link>
 
-      <div className="mt-4 mb-8">
-        <h1 className="text-3xl font-semibold tracking-tight">Risk Scoring Methodology</h1>
-        <p className="mt-2 text-muted-foreground">
-            How Realdesk assesses risk across RWA protocols
+      <div className="mt-5 mb-10 max-w-3xl">
+        <span className="inline-flex items-center gap-2 rounded-full border border-primary/25 bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
+          <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+          Framework v1.0
+        </span>
+        <h1 className="font-display mt-5 text-3xl font-bold tracking-tight sm:text-4xl">
+          <span className="text-gradient">Risk Scoring</span> Methodology
+        </h1>
+        <p className="mt-4 text-base leading-relaxed text-muted-foreground">
+          Realdesk scores each protocol across seven dimensions on a 1 to 5
+          scale, where 5 represents the lowest risk and 1 the highest. Dimension
+          scores are combined using fixed weights to produce a single weighted
+          score and letter grade.
         </p>
-        </div>
+        <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+          Scores are assigned manually based on public information, audit
+          history, regulatory filings, and protocol documentation. They reflect
+          a point-in-time assessment and are revised as material information
+          becomes available. This is an analytical framework, not investment
+          advice.
+        </p>
+      </div>
 
-      <section className="mb-12 space-y-4 text-sm leading-relaxed">
-        <p>
-          Realdesk scores each protocol across seven dimensions on a 1 to 5 scale, where 5 represents the lowest risk and 1 the highest. Dimension scores are combined using fixed weights to produce a single weighted score and letter grade.
-        </p>
-        <p>
-          Scores are assigned manually based on public information, audit history, regulatory filings, and protocol documentation. They reflect a point-in-time assessment and are revised as material information becomes available.
-        </p>
-        <p>
-          This is an analytical framework, not investment advice. Users should conduct their own due diligence before allocating capital.
-        </p>
-      </section>
-
+      {/* Grading scale */}
       <section className="mb-12">
-        <h2 className="text-2xl font-semibold mb-4">Grading scale</h2>
-        <div className="rounded-lg border divide-y">
-          {[
-            { grade: 'A', range: '4.50 - 5.00', label: 'Low Risk' },
-            { grade: 'B', range: '3.50 - 4.49', label: 'Moderate Risk' },
-            { grade: 'C', range: '2.50 - 3.49', label: 'Elevated Risk' },
-            { grade: 'D', range: '1.50 - 2.49', label: 'High Risk' },
-            { grade: 'F', range: '0.00 - 1.49', label: 'Very High Risk' },
-          ].map((g) => (
-            <div key={g.grade} className="flex items-center gap-4 p-4">
-              <div className="text-2xl font-bold w-8">{g.grade}</div>
-              <div className="flex-1">
-                <div className="font-medium">{g.label}</div>
-                <div className="text-sm text-muted-foreground">Weighted score {g.range}</div>
+        <SectionTitle>Grading scale</SectionTitle>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+          {GRADES.map((g) => (
+            <div
+              key={g.grade}
+              className={`rounded-xl border p-4 ${gradeBadgeClass(g.grade)}`}
+            >
+              <div className="num text-3xl font-bold leading-none">
+                {g.grade}
               </div>
+              <div className="mt-2 text-sm font-semibold">{g.label}</div>
+              <div className="num mt-0.5 text-xs opacity-70">{g.range}</div>
             </div>
           ))}
         </div>
       </section>
 
+      {/* Dimension weights */}
       <section className="mb-12">
-        <h2 className="text-2xl font-semibold mb-4">Dimension weights</h2>
-        <div className="rounded-lg border divide-y">
+        <SectionTitle>Dimension weights</SectionTitle>
+        <div className="rounded-xl border bg-card/80 p-5">
+          <div className="space-y-3.5">
+            {Object.entries(RISK_WEIGHTS).map(([key, weight]) => {
+              const dimensionKey = key as DimensionKey;
+              return (
+                <div key={key} className="flex items-center gap-4">
+                  <span className="w-40 shrink-0 text-sm font-medium">
+                    {RISK_DIMENSION_LABELS[dimensionKey]}
+                  </span>
+                  <div className="h-2 flex-1 overflow-hidden rounded-full bg-muted">
+                    <div
+                      className="h-full rounded-full bg-gradient-to-r from-primary/60 to-primary"
+                      style={{ width: `${(weight / maxWeight) * 100}%` }}
+                    />
+                  </div>
+                  <span className="num w-12 shrink-0 text-right text-sm font-semibold">
+                    {(weight * 100).toFixed(0)}%
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* Dimension details */}
+      <section>
+        <SectionTitle>Dimension details</SectionTitle>
+        <div className="grid gap-4 lg:grid-cols-2">
           {Object.entries(RISK_WEIGHTS).map(([key, weight]) => {
             const dimensionKey = key as DimensionKey;
+            const details = DIMENSION_DETAILS[dimensionKey];
             return (
-              <div key={key} className="flex items-center justify-between p-4">
-                <div className="font-medium">{RISK_DIMENSION_LABELS[dimensionKey]}</div>
-                <div className="text-sm text-muted-foreground">{(weight * 100).toFixed(0)}%</div>
+              <div
+                key={key}
+                className="glow-hover rounded-xl border bg-card/80 p-5 hover:border-primary/40"
+              >
+                <div className="mb-1 flex items-center justify-between gap-2">
+                  <h3 className="font-display text-base font-semibold tracking-tight">
+                    {RISK_DIMENSION_LABELS[dimensionKey]}
+                  </h3>
+                  <span className="num shrink-0 rounded-full border border-primary/20 bg-primary/10 px-2 py-0.5 text-[11px] text-primary">
+                    {(weight * 100).toFixed(0)}% weight
+                  </span>
+                </div>
+                <p className="mb-4 text-sm text-muted-foreground">
+                  {details.description}
+                </p>
+                <div className="space-y-2">
+                  {details.scoring.map((s) => (
+                    <div key={s.score} className="flex gap-3 text-sm">
+                      <span className="num grid h-5 w-9 shrink-0 place-items-center rounded border border-border bg-muted/60 text-xs font-semibold">
+                        {s.score}/5
+                      </span>
+                      <span className="flex-1 text-muted-foreground">
+                        {s.criteria}
+                      </span>
+                    </div>
+                  ))}
+                </div>
               </div>
             );
           })}
         </div>
       </section>
 
-      <section className="space-y-8">
-        <h2 className="text-2xl font-semibold">Dimension details</h2>
-        {Object.entries(RISK_WEIGHTS).map(([key]) => {
-          const dimensionKey = key as DimensionKey;
-          const details = DIMENSION_DETAILS[dimensionKey];
-          return (
-            <div key={key} className="rounded-lg border p-6">
-              <h3 className="text-xl font-semibold mb-2">{RISK_DIMENSION_LABELS[dimensionKey]}</h3>
-              <p className="text-sm text-muted-foreground mb-4">{details.description}</p>
-              <div className="space-y-2">
-                {details.scoring.map((s) => (
-                  <div key={s.score} className="flex gap-3 text-sm">
-                    <div className="font-semibold w-8">{s.score}/5</div>
-                    <div className="flex-1 text-muted-foreground">{s.criteria}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          );
-        })}
-      </section>
-
-      <p className="mt-12 text-xs text-muted-foreground">
-        Last updated: methodology v1.0. Scores are reviewed quarterly or upon material protocol changes.
+      <p className="num mt-12 text-xs text-muted-foreground">
+        Last updated: methodology v1.0. Scores are reviewed quarterly or upon
+        material protocol changes.
       </p>
     </main>
   );

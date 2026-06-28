@@ -1,30 +1,8 @@
 'use client';
 
 import { motion } from 'framer-motion';
-
-function getRiskColor(letter: string): string {
-  switch (letter) {
-    case 'A':
-      return 'text-emerald-500';
-    case 'B':
-      return 'text-lime-500';
-    case 'C':
-      return 'text-amber-500';
-    case 'D':
-      return 'text-orange-500';
-    case 'F':
-      return 'text-red-500';
-    default:
-      return 'text-foreground';
-  }
-}
-
-function formatTVL(tvl: number): string {
-  if (tvl >= 1_000_000_000) return `$${(tvl / 1_000_000_000).toFixed(2)}B`;
-  if (tvl >= 1_000_000) return `$${(tvl / 1_000_000).toFixed(2)}M`;
-  if (tvl >= 1_000) return `$${(tvl / 1_000).toFixed(0)}K`;
-  return `$${tvl.toLocaleString()}`;
-}
+import { Layers, Percent, ShieldCheck } from 'lucide-react';
+import { formatCompactUsd, gradeTextClass } from '@/lib/ui';
 
 export function ProtocolStats({
   tvl,
@@ -38,44 +16,63 @@ export function ProtocolStats({
   weightedScore: number;
 }) {
   const cards = [
-    { label: 'Total TVL', content: formatTVL(tvl) },
-    { label: 'Weighted Average APY', content: `${apy.toFixed(2)}%` },
+    {
+      label: 'Total TVL',
+      icon: Layers,
+      content: <span className="num">{formatCompactUsd(tvl)}</span>,
+    },
+    {
+      label: 'Weighted Avg APY',
+      icon: Percent,
+      content: <span className="num text-pos">{apy.toFixed(2)}%</span>,
+    },
+    {
+      label: 'Risk Grade',
+      icon: ShieldCheck,
+      content: grade ? (
+        <span className="flex items-baseline gap-2">
+          <span className={`num ${gradeTextClass(grade.letter)}`}>
+            {grade.letter}
+          </span>
+          <span className="text-sm font-normal text-muted-foreground">
+            {grade.label}{' '}
+            <span className="num">({weightedScore.toFixed(2)})</span>
+          </span>
+        </span>
+      ) : (
+        <span className="text-muted-foreground">N/A</span>
+      ),
+    },
   ];
 
   return (
-    <div className="grid grid-cols-3 gap-4 mb-8">
-      {cards.map((card, i) => (
-        <motion.div
-          key={card.label}
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: i * 0.1 }}
-          whileHover={{ y: -4 }}
-          className="rounded-xl border bg-card p-4 transition-colors hover:border-primary/50"
-        >
-          <div className="text-sm text-muted-foreground">{card.label}</div>
-          <div className="text-2xl font-bold tabular-nums">{card.content}</div>
-        </motion.div>
-      ))}
-      {grade && (
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.2 }}
-          whileHover={{ y: -4 }}
-          className="rounded-xl border bg-card p-4 transition-colors hover:border-primary/50"
-        >
-          <div className="text-sm text-muted-foreground">Risk Grade</div>
-          <div className="flex items-baseline gap-2">
-            <div className={`text-2xl font-bold ${getRiskColor(grade.letter)}`}>
-              {grade.letter}
+    <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 lg:gap-4">
+      {cards.map((card, i) => {
+        const Icon = card.icon;
+        return (
+          <motion.div
+            key={card.label}
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: i * 0.1 }}
+            whileHover={{ y: -4 }}
+            className="glow-hover group relative overflow-hidden rounded-xl border bg-card/80 p-5 hover:border-primary/50"
+          >
+            <div className="pointer-events-none absolute -right-10 -top-10 h-24 w-24 rounded-full bg-primary/10 blur-2xl transition-opacity duration-300 group-hover:bg-primary/20" />
+            <div className="flex items-center justify-between">
+              <span className="num text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
+                {card.label}
+              </span>
+              <span className="grid h-7 w-7 place-items-center rounded-md bg-primary/12 text-primary ring-1 ring-primary/20">
+                <Icon className="h-3.5 w-3.5" />
+              </span>
             </div>
-            <div className="text-sm text-muted-foreground">
-              {grade.label} ({weightedScore.toFixed(2)})
+            <div className="mt-3 text-2xl font-bold tracking-tight lg:text-3xl">
+              {card.content}
             </div>
-          </div>
-        </motion.div>
-      )}
+          </motion.div>
+        );
+      })}
     </div>
   );
 }
