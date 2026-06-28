@@ -9,7 +9,11 @@ type LlamaPool = {
   apy: number;
 };
 
-const PROTOCOLS = {
+// Abort upstream DeFiLlama requests that hang so a slow or unresponsive origin
+// cannot tie up serverless function instances while the app is under load.
+const REQUEST_TIMEOUT_MS = 15_000;
+
+export const PROTOCOLS = {
   'ondo-yield-assets': { name: 'Ondo Finance', assetType: 'T-Bill' },
   'maple': { name: 'Maple Finance', assetType: 'Private Credit' },
   'centrifuge-protocol': { name: 'Centrifuge', assetType: 'Private Credit' },
@@ -19,6 +23,7 @@ const PROTOCOLS = {
 export async function fetchProtocols(): Promise<Protocol[]> {
   const res = await fetch('https://yields.llama.fi/pools', {
     next: { revalidate: 3600 },
+    signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
   });
   const json = await res.json();
   const pools: LlamaPool[] = json.data;
@@ -58,6 +63,7 @@ export async function fetchProtocolDetail(
 
   const res = await fetch('https://yields.llama.fi/pools', {
     next: { revalidate: 3600 },
+    signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
   });
   const json = await res.json();
   const allPools: LlamaPool[] = json.data;
@@ -137,6 +143,7 @@ export async function fetchProtocolTvlHistory(
   try {
     const res = await fetch(`https://api.llama.fi/protocol/${slug}`, {
       next: { revalidate: 3600 },
+      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
     });
     if (!res.ok) return [];
 
@@ -159,6 +166,7 @@ export async function fetchProtocolTvlHistory(
 async function findLargestPoolId(slug: string): Promise<string | null> {
   const res = await fetch('https://yields.llama.fi/pools', {
     next: { revalidate: 3600 },
+    signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
   });
   if (!res.ok) return null;
 
@@ -183,6 +191,7 @@ export async function fetchProtocolApyHistory(
 
     const res = await fetch(`https://yields.llama.fi/chart/${poolId}`, {
       next: { revalidate: 3600 },
+      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
     });
     if (!res.ok) return [];
 

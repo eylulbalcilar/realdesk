@@ -1,4 +1,5 @@
 import {
+  PROTOCOLS,
   fetchProtocolDetail,
   fetchProtocolTvlHistory,
   fetchProtocolApyHistory,
@@ -25,6 +26,17 @@ import { formatCompactUsd, gradeBadgeClass } from '@/lib/ui';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
+
+// Prerender only the known protocol pages and serve them from the CDN with
+// hourly ISR. Unknown ids 404 at the edge (dynamicParams = false) instead of
+// invoking a function, which keeps floods and scraping off the serverless tier
+// and off the upstream DeFiLlama API.
+export const dynamicParams = false;
+export const revalidate = 3600;
+
+export function generateStaticParams() {
+  return Object.keys(PROTOCOLS).map((id) => ({ id }));
+}
 
 export default async function ProtocolPage({
   params,
