@@ -1,36 +1,68 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Realdesk
 
-## Getting Started
+An analyst terminal for real-world asset (RWA) protocols. Realdesk compares yield, total value locked, and a proprietary risk grade across the leading RWA protocols, with 90-day historical trends so you can see whether a protocol is growing or shrinking, not just its current snapshot.
 
-First, run the development server:
+Live data is sourced from the [DeFiLlama](https://defillama.com) API.
+
+## Features
+
+- **Protocol comparison.** A single table ranking Ondo, Maple, Centrifuge, and Goldfinch by APY, TVL, risk grade, and pool count.
+- **Risk grading.** Each protocol is scored across 7 weighted dimensions (collateral, smart contract, counterparty, regulatory, transparency, liquidity, oracle) and rolled up into a letter grade. See the in-app methodology page for the full rubric.
+- **90-day history.** Every protocol detail page charts its historical TVL and APY, with a toggle between the two and a period change indicator.
+- **Chain distribution.** A breakdown of where each protocol's TVL sits across chains.
+- **Live and themed.** TVL-weighted aggregates, animated counters, and a dark/light terminal aesthetic with a violet accent.
+
+## Tech stack
+
+- [Next.js 16](https://nextjs.org) (App Router) with TypeScript
+- [Tailwind CSS v4](https://tailwindcss.com) and [shadcn/ui](https://ui.shadcn.com)
+- [Recharts](https://recharts.org) for charts
+- [Framer Motion](https://www.framer.com/motion/) for animation
+- [next-themes](https://github.com/pacocoursey/next-themes) for dark/light switching
+
+## Data sources
+
+All data comes from public DeFiLlama endpoints, fetched server-side and revalidated hourly:
+
+| Purpose | Endpoint |
+| --- | --- |
+| Current pools (APY, TVL per pool) | `https://yields.llama.fi/pools` |
+| Historical protocol TVL | `https://api.llama.fi/protocol/{slug}` |
+| Historical pool APY | `https://yields.llama.fi/chart/{poolId}` |
+
+Risk scores are maintained manually in `lib/risk-scores.ts` and reflect a point-in-time assessment.
+
+## Getting started
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+To build and run a production bundle:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm run build
+npm run start
+```
 
-## Learn More
+## Project structure
 
-To learn more about Next.js, take a look at the following resources:
+```
+app/                     App Router pages
+  page.tsx               Overview (metrics strip + comparison table)
+  protocol/[id]/page.tsx Protocol detail (stats, history charts, risk breakdown, pools)
+  methodology/page.tsx   Risk scoring methodology
+components/              UI components (charts, table, header, footer)
+lib/
+  defillama.ts           DeFiLlama fetchers (current + historical)
+  risk-scores.ts         Risk rubric, weights, and grading
+  types.ts               Shared types
+  ui.ts                  Formatting and color helpers
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Disclaimer
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Realdesk is an analytical tool, not investment advice. Risk grades are subjective and provided for research purposes only. Always do your own due diligence before allocating capital.
