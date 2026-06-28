@@ -1,9 +1,12 @@
 # Realdesk
 
+[![Live demo](https://img.shields.io/badge/live-realdesk--nine.vercel.app-7c3aed.svg)](https://realdesk-nine.vercel.app)
 [![CI](https://github.com/eylulbalcilar/realdesk/actions/workflows/ci.yml/badge.svg)](https://github.com/eylulbalcilar/realdesk/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-7c3aed.svg)](LICENSE)
 [![Next.js](https://img.shields.io/badge/Next.js-16-000000.svg?logo=next.js)](https://nextjs.org)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-3178c6.svg?logo=typescript&logoColor=white)](https://www.typescriptlang.org)
+
+**Live: [realdesk-nine.vercel.app](https://realdesk-nine.vercel.app)**
 
 An analyst terminal for real-world asset (RWA) protocols. Realdesk compares yield, total value locked, and a proprietary risk grade across the leading RWA protocols, with 90-day historical trends so you can see whether a protocol is growing or shrinking, not just its current snapshot.
 
@@ -44,7 +47,7 @@ npm install
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000).
+Open [http://localhost:3000](http://localhost:3000) for the local dev server. This URL only runs on your machine while `npm run dev` is active. The deployed app is at [realdesk-nine.vercel.app](https://realdesk-nine.vercel.app).
 
 To build and run a production bundle:
 
