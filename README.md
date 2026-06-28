@@ -1,5 +1,10 @@
 # Realdesk
 
+[![CI](https://github.com/eylulbalcilar/realdesk/actions/workflows/ci.yml/badge.svg)](https://github.com/eylulbalcilar/realdesk/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-7c3aed.svg)](LICENSE)
+[![Next.js](https://img.shields.io/badge/Next.js-16-000000.svg?logo=next.js)](https://nextjs.org)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5-3178c6.svg?logo=typescript&logoColor=white)](https://www.typescriptlang.org)
+
 An analyst terminal for real-world asset (RWA) protocols. Realdesk compares yield, total value locked, and a proprietary risk grade across the leading RWA protocols, with 90-day historical trends so you can see whether a protocol is growing or shrinking, not just its current snapshot.
 
 Live data is sourced from the [DeFiLlama](https://defillama.com) API.
