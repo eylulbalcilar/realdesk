@@ -20,8 +20,10 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { ChainDistribution } from '@/components/chain-distribution';
 import { HistoryChart } from '@/components/history-chart';
+import { AnalystNote } from '@/components/analyst-note';
 import { RiskBreakdown } from '@/components/risk-breakdown';
 import { ProtocolStats } from '@/components/protocol-stats';
+import { ANALYST_NOTES } from '@/lib/analyst-notes';
 import { formatCompactUsd, gradeBadgeClass } from '@/lib/ui';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
@@ -56,6 +58,7 @@ export default async function ProtocolPage({
   const risk = RISK_SCORES[id];
   const weightedScore = risk ? calculateWeightedRiskScore(risk.scores) : 0;
   const grade = risk ? getRiskGrade(weightedScore) : null;
+  const note = ANALYST_NOTES[id];
 
   return (
     <main className="shell pt-8 pb-10">
@@ -118,6 +121,12 @@ export default async function ProtocolPage({
           weightedScore={weightedScore}
         />
       </div>
+
+      {note && (
+        <div className="mb-8">
+          <AnalystNote note={note} />
+        </div>
+      )}
 
       <div className="mb-8">
         <HistoryChart tvl={tvlHistory} apy={apyHistory} />

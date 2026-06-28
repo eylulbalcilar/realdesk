@@ -28,6 +28,13 @@ export type ProtocolHistory = {
   tvl: HistoryPoint[];
   apy: HistoryPoint[];
 };
+
+export type AnalystNote = {
+  summary: string;
+  lastUpdated: string;
+  bullishPoints?: string[];
+  bearishPoints?: string[];
+};
 export type RiskDimension =
   | 'collateral'
   | 'smartContract'
