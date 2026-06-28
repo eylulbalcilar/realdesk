@@ -1,6 +1,7 @@
-import { Protocol, Pool, ProtocolDetail } from './types';
+import { Protocol, Pool, ProtocolDetail, HistoryPoint } from './types';
 
 type LlamaPool = {
+  pool: string;
   chain: string;
   project: string;
   symbol: string;
@@ -107,4 +108,103 @@ export function aggregateTVLByChain(pools: Pool[]): ChainTVL[] {
   return Array.from(chainMap.entries())
     .map(([name, value]) => ({ name, value }))
     .sort((a, b) => b.value - a.value);
+}
+
+// Historical data sources (verified against the live DeFiLlama API):
+//   TVL: https://api.llama.fi/protocol/{slug} -> { tvl: [{ date, totalLiquidityUSD }] }
+//   APY: https://yields.llama.fi/chart/{poolId} -> { data: [{ timestamp, apy, tvlUsd }] }
+// The protocol slugs match the keys in PROTOCOLS, so no extra mapping is needed.
+const HISTORY_DAYS = 90;
+const DAY_SECONDS = 86_400;
+
+type LlamaTvlPoint = {
+  date: number;
+  totalLiquidityUSD: number;
+};
+
+type LlamaChartPoint = {
+  timestamp: string;
+  apy: number | null;
+  tvlUsd: number;
+};
+
+// Last 90 days of protocol-level TVL, one point per recorded day.
+export async function fetchProtocolTvlHistory(
+  slug: string
+): Promise<HistoryPoint[]> {
+  if (!(slug in PROTOCOLS)) return [];
+
+  try {
+    const res = await fetch(`https://api.llama.fi/protocol/${slug}`, {
+      next: { revalidate: 3600 },
+    });
+    if (!res.ok) return [];
+
+    const json = await res.json();
+    const series: LlamaTvlPoint[] = Array.isArray(json.tvl) ? json.tvl : [];
+    const cutoff = Date.now() / 1000 - HISTORY_DAYS * DAY_SECONDS;
+
+    return series
+      .filter((p) => p.date >= cutoff && typeof p.totalLiquidityUSD === 'number')
+      .map((p) => ({
+        date: new Date(p.date * 1000).toISOString().slice(0, 10),
+        value: p.totalLiquidityUSD,
+      }));
+  } catch {
+    return [];
+  }
+}
+
+// Resolve the current largest pool for a protocol so we chart its APY history.
+async function findLargestPoolId(slug: string): Promise<string | null> {
+  const res = await fetch('https://yields.llama.fi/pools', {
+    next: { revalidate: 3600 },
+  });
+  if (!res.ok) return null;
+
+  const json = await res.json();
+  const pools: LlamaPool[] = Array.isArray(json.data) ? json.data : [];
+  const matching = pools.filter((p) => p.project === slug);
+  if (matching.length === 0) return null;
+
+  const largest = matching.reduce((a, b) => (b.tvlUsd > a.tvlUsd ? b : a));
+  return largest.pool ?? null;
+}
+
+// Last 90 days of APY for the protocol's largest pool, downsampled to daily.
+export async function fetchProtocolApyHistory(
+  slug: string
+): Promise<HistoryPoint[]> {
+  if (!(slug in PROTOCOLS)) return [];
+
+  try {
+    const poolId = await findLargestPoolId(slug);
+    if (!poolId) return [];
+
+    const res = await fetch(`https://yields.llama.fi/chart/${poolId}`, {
+      next: { revalidate: 3600 },
+    });
+    if (!res.ok) return [];
+
+    const json = await res.json();
+    const data: LlamaChartPoint[] = Array.isArray(json.data) ? json.data : [];
+    const cutoff = Date.now() - HISTORY_DAYS * DAY_SECONDS * 1000;
+
+    // Chart data is chronological, so keeping the last reading per calendar day
+    // yields a clean daily series in date order.
+    const byDay = new Map<string, number>();
+    for (const point of data) {
+      if (point.apy == null) continue;
+      const time = new Date(point.timestamp).getTime();
+      if (Number.isNaN(time) || time < cutoff) continue;
+      byDay.set(point.timestamp.slice(0, 10), point.apy);
+    }
+
+    return Array.from(byDay.entries()).map(([date, value]) => ({
+      date,
+      value,
+    }));
+  } catch {
+    return [];
+  }
 }

@@ -18,6 +18,16 @@ export type Pool = {
 export type ProtocolDetail = Protocol & {
   pools: Pool[];
 };
+
+export type HistoryPoint = {
+  date: string;
+  value: number;
+};
+
+export type ProtocolHistory = {
+  tvl: HistoryPoint[];
+  apy: HistoryPoint[];
+};
 export type RiskDimension =
   | 'collateral'
   | 'smartContract'
