@@ -53,6 +53,22 @@ npm run build
 npm run start
 ```
 
+Run the same checks as CI:
+
+```bash
+npm run lint       # ESLint
+npm run typecheck  # tsc --noEmit
+npm test           # Vitest unit tests
+npm run build      # production build
+```
+
+## Security and resilience
+
+- **Static detail pages.** Each protocol page is prerendered and served with hourly ISR (`generateStaticParams` with `dynamicParams = false`), so traffic and unknown ids hit the CDN or return a 404 at the edge instead of invoking a function on every request.
+- **Upstream timeouts.** Every DeFiLlama request carries a 15s abort timeout so a slow or unresponsive origin cannot tie up server resources.
+- **Response headers.** Strict security headers on every route (HSTS, X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy, and a frame-ancestors CSP). The X-Powered-By header is removed.
+- **Supply chain.** CI runs lint, typecheck, tests, and build on every push and pull request. Dependabot tracks npm and GitHub Actions updates.
+
 ## Project structure
 
 ```
@@ -66,6 +82,8 @@ lib/
   risk-scores.ts         Risk rubric, weights, and grading
   types.ts               Shared types
   ui.ts                  Formatting and color helpers
+  *.test.ts              Vitest unit tests
+.github/                 CI workflow, Dependabot, and community templates
 ```
 
 ## Disclaimer
