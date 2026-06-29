@@ -8,6 +8,20 @@ export function formatCompactUsd(value: number): string {
   return `$${value.toLocaleString()}`;
 }
 
+// Compact number without a currency prefix (e.g. token supply)
+export function formatCompactNumber(value: number): string {
+  if (value >= 1_000_000_000) return `${(value / 1_000_000_000).toFixed(2)}B`;
+  if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(2)}M`;
+  if (value >= 1_000) return `${(value / 1_000).toFixed(1)}K`;
+  return value.toFixed(2);
+}
+
+// 0x1234...abcd style address shortening
+export function shortenAddress(address: string): string {
+  if (address.length < 11) return address;
+  return `${address.slice(0, 6)}...${address.slice(-4)}`;
+}
+
 // Letter grade -> text color (used for accent numerals)
 export function gradeTextClass(letter: string): string {
   switch (letter) {

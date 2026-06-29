@@ -21,9 +21,11 @@ import { Badge } from '@/components/ui/badge';
 import { ChainDistribution } from '@/components/chain-distribution';
 import { HistoryChart } from '@/components/history-chart';
 import { AnalystNote } from '@/components/analyst-note';
+import { OnchainPanel } from '@/components/onchain-panel';
 import { RiskBreakdown } from '@/components/risk-breakdown';
 import { ProtocolStats } from '@/components/protocol-stats';
 import { ANALYST_NOTES } from '@/lib/analyst-notes';
+import { fetchProtocolOnchainData } from '@/lib/onchain';
 import { formatCompactUsd, gradeBadgeClass } from '@/lib/ui';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
@@ -50,9 +52,10 @@ export default async function ProtocolPage({
 
   if (!protocol) notFound();
 
-  const [tvlHistory, apyHistory] = await Promise.all([
+  const [tvlHistory, apyHistory, onchainTokens] = await Promise.all([
     fetchProtocolTvlHistory(id),
     fetchProtocolApyHistory(id),
+    fetchProtocolOnchainData(id),
   ]);
 
   const risk = RISK_SCORES[id];
@@ -125,6 +128,12 @@ export default async function ProtocolPage({
       {note && (
         <div className="mb-8">
           <AnalystNote note={note} />
+        </div>
+      )}
+
+      {onchainTokens.length > 0 && (
+        <div className="mb-8">
+          <OnchainPanel tokens={onchainTokens} />
         </div>
       )}
 

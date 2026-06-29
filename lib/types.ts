@@ -35,6 +35,14 @@ export type AnalystNote = {
   bullishPoints?: string[];
   bearishPoints?: string[];
 };
+
+export type OnchainToken = {
+  symbol: string;
+  label: string;
+  address: string;
+  decimals: number;
+  totalSupply: string;
+};
 export type RiskDimension =
   | 'collateral'
   | 'smartContract'
