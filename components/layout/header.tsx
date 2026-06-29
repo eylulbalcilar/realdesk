@@ -7,6 +7,7 @@ import { Sun, Moon } from 'lucide-react';
 
 const NAV = [
   { href: '/', label: 'Protocols' },
+  { href: '/compare', label: 'Compare' },
   { href: '/methodology', label: 'Methodology' },
 ];
 
